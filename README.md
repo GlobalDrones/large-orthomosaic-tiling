@@ -6,6 +6,7 @@ Large Orthomosaic Tiling é uma ferramenta em Python para dividir imagens ortomo
 
 - **Memória eficiente:** Lê apenas as partes necessárias da imagem utilizando janelas.
 - **Suporte para imagens grandes:** Ideal para orthomosaicos e outras imagens de alta resolução.
+- **Dimensões reais:** Define o tamanho do tile em metros e converte automaticamente para pixels.
 - **Salva somente tiles com conteúdo:** Ignora tiles que contenham apenas pixels de fundo (valor zero).
 - **Saída em PNG:** Gera tiles no formato PNG, preservando a qualidade da imagem.
 - **Nomeação personalizada:** Utiliza um nome de projeto para prefixar os arquivos gerados.
@@ -29,21 +30,21 @@ Large Orthomosaic Tiling é uma ferramenta em Python para dividir imagens ortomo
 Execute o script via linha de comando, passando os seguintes argumentos:
 
 ```bash
-python split.py <input_image_path> <tile_width> <save_path> <project_name>
+python split.py <input_image_path> <tile_width_meters> <save_path> <project_name>
 ```
 
 Onde:
 
 - `input_image_path`: Caminho para a imagem .tif (ortomosaico) de entrada.
-- `tile_width`: Largura (e altura, pois os tiles são quadrados) de cada tile em pixels.
+- `tile_width_meters`: Largura (e altura, pois os tiles são quadrados) de cada tile em metros.
 - `save_path`: Diretório onde os tiles serão salvos. O diretório será criado se não existir.
 - `project_name`: Nome do projeto que será utilizado como prefixo nos nomes dos arquivos gerados.
 
 ### Exemplo
 
 ```bash
-python split.py "D:\downloads\ortho.tif" 1024 "D:\downloads\tiles" "MyProject"
+python split.py "D:\downloads\ortho.tif" 250 "D:\downloads\tiles" "MyProject"
 ```
 
-Esse comando dividirá a imagem `ortho.tif` em tiles de 1024x1024 pixels, salvando os arquivos PNG resultantes no diretório `D:\downloads\tiles` com nomes iniciados por `MyProject_tile_`.
+Esse comando dividirá a imagem `ortho.tif` em tiles de 250X250 metros (convertidos automaticamente para pixels com base na resolução da imagem), salvando os arquivos PNG resultantes no diretório `D:\downloads\tiles` com nomes iniciados por `MyProject_tile_`.
 

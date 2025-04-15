@@ -5,9 +5,10 @@ import numpy as np
 import rasterio
 from rasterio.windows import Window
 from termcolor import colored
+import math
 
-def split_image(image_path, tile_width, save_path, project_name):
-    print(f"Processando {image_path} para cortes de {tile_width}x{tile_width} px")
+def split_image(image_path, tile_width_meters, save_path, project_name):
+    print(f"Processando {image_path} para cortes de {tile_width_meters}x{tile_width_meters} metros")
 
     # Verifica se o arquivo de entrada existe
     if not os.path.isfile(image_path):
@@ -23,26 +24,40 @@ def split_image(image_path, tile_width, save_path, project_name):
         img_height = src.height
         count_bands = src.count
 
+        # Obtém a resolução espacial em metros/pixel
+        transform = src.transform
+        pixel_width_meters = abs(transform[0])  # Resolução X (metros/pixel)
+        pixel_height_meters = abs(transform[4])  # Resolução Y (metros/pixel)
+        
+        # Verificação da resolução
+        if pixel_width_meters == 0 or pixel_height_meters == 0:
+            raise ValueError("Não foi possível determinar a resolução espacial da imagem. Verifique se o GeoTIFF possui metadados válidos.")
+
+        # Converte o tamanho do tile de metros para pixels
+        tile_width_pixels = math.ceil(tile_width_meters / pixel_width_meters)
+        
         print("=== Metadados da imagem ===")
         print(f"  Largura x Altura: {img_width} x {img_height}")
         print(f"  Número de bandas: {count_bands}")
+        print(f"  Resolução espacial: {pixel_width_meters:.6f} x {pixel_height_meters:.6f} metros/pixel")
+        print(f"  Tamanho do tile: {tile_width_meters} metros = {tile_width_pixels} pixels")
         print(f"  Dtypes: {src.dtypes}")
         print(f"  Perfil rasterio: {src.profile}")
         print("===========================")
 
         # Quantos tiles na horizontal/vertical
-        w_tiles = (img_width + tile_width - 1) // tile_width
-        h_tiles = (img_height + tile_width - 1) // tile_width
+        w_tiles = (img_width + tile_width_pixels - 1) // tile_width_pixels
+        h_tiles = (img_height + tile_width_pixels - 1) // tile_width_pixels
         n_tiles = w_tiles * h_tiles
         print(f"Criando {n_tiles} tiles ({w_tiles} x {h_tiles}).")
 
         tile_number = 0
         for i in range(h_tiles):
             for j in range(w_tiles):
-                x = j * tile_width
-                y = i * tile_width
-                width = min(tile_width, img_width - x)
-                height = min(tile_width, img_height - y)
+                x = j * tile_width_pixels
+                y = i * tile_width_pixels
+                width = min(tile_width_pixels, img_width - x)
+                height = min(tile_width_pixels, img_height - y)
 
                 window = Window(x, y, width, height)
                 # Lê dados do tile: shape = (band, height, width)
@@ -105,9 +120,9 @@ if __name__ == "__main__":
         description="Divide ortofoto .tif em tiles PNG, mantendo transparência (alpha)."
     )
     parser.add_argument("input_image_path", type=str, help="Caminho do arquivo .tif")
-    parser.add_argument("tile_width", type=int, help="Dimensão do tile (em px)")
+    parser.add_argument("tile_width_meters", type=float, help="Dimensão do tile (em metros)")
     parser.add_argument("save_path", type=str, help="Diretório para salvar os tiles")
     parser.add_argument("project_name", type=str, help="Nome do projeto (prefixo)")
 
     args = parser.parse_args()
-    split_image(args.input_image_path, args.tile_width, args.save_path, args.project_name)
+    split_image(args.input_image_path, args.tile_width_meters, args.save_path, args.project_name)
